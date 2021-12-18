@@ -3,56 +3,46 @@ package main
 import (
 	"go/ast"
 	"go/token"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/ast/inspector"
-
 	"golang.org/x/tools/go/analysis"
+	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/analysis/singlechecker"
 )
 
-var Analyzer = &analysis.Analyzer{
-	Name:     "addlint",
-	Doc:      "reports integer additions",
-	Run:      run,
-	Requires: []*analysis.Analyzer{inspect.Analyzer},
-}
+var (
+	Analyzer = &analysis.Analyzer{
+		Name:     "addlint",
+		Doc:      "reports integer additions",
+		Run:      run,
+		Requires: []*analysis.Analyzer{inspect.Analyzer},
+	}
 
-var c = 4
-
-const (
-	a = 1
-	b = 2
+	decOrder string
 )
 
-const hello = 123
-
 func init() {
+	Analyzer.Flags.StringVar(&decOrder, "decorder", "type,const,var,func", "define the order of types, constants, variables and functions declarations inside a file")
 }
 
 func main() {
 	singlechecker.Main(Analyzer)
 }
 
-func init() {
-
-}
-
 func run(pass *analysis.Pass) (interface{}, error) {
-	runDeclNumCheck(pass)
-	runInitFuncFirstCheck(pass)
+	for _, f := range pass.Files {
+		ast.Inspect(f, runDeclNumCheck(pass))
+		ast.Inspect(f, runInitFuncFirstCheck(pass))
+	}
 
 	return nil, nil
 }
 
-func runInitFuncFirstCheck(pass *analysis.Pass) {
-	detective := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
-
+func runInitFuncFirstCheck(pass *analysis.Pass) func(ast.Node) bool {
 	nonInitFound := false
 
-	detective.Preorder([]ast.Node{(*ast.FuncDecl)(nil)}, func(n ast.Node) {
+	return func(n ast.Node) bool {
 		dec, ok := n.(*ast.FuncDecl)
 		if !ok {
-			return
+			return true
 		}
 
 		if dec.Name.Name == "init" {
@@ -62,12 +52,12 @@ func runInitFuncFirstCheck(pass *analysis.Pass) {
 		} else {
 			nonInitFound = true
 		}
-	})
+
+		return true
+	}
 }
 
-func runDeclNumCheck(pass *analysis.Pass) {
-	detective := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
-
+func runDeclNumCheck(pass *analysis.Pass) func(ast.Node) bool {
 	ts := []token.Token{token.TYPE, token.CONST, token.VAR}
 
 	counts := map[token.Token]int{}
@@ -80,38 +70,38 @@ func runDeclNumCheck(pass *analysis.Pass) {
 		end   token.Pos
 	}
 
-	detective.Preorder([]ast.Node{(*ast.FuncDecl)(nil)}, func(n ast.Node) {
-		dec, ok := n.(*ast.FuncDecl)
-		if !ok {
-			return
+	return func(n ast.Node) bool {
+		fn, ok := n.(*ast.FuncDecl)
+		if ok {
+			funcPoss = append(funcPoss, struct {
+				start token.Pos
+				end   token.Pos
+			}{start: fn.Pos(), end: fn.End()})
+
+			return true
 		}
 
-		funcPoss = append(funcPoss, struct {
-			start token.Pos
-			end   token.Pos
-		}{start: dec.Pos(), end: dec.End()})
-	})
-
-	detective.Preorder([]ast.Node{(*ast.GenDecl)(nil)}, func(n ast.Node) {
-		dec, ok := n.(*ast.GenDecl)
+		dn, ok := n.(*ast.GenDecl)
 		if !ok {
-			return
+			return true
 		}
 
 		for _, poss := range funcPoss {
-			if poss.start < dec.Pos() && poss.end > dec.Pos() {
-				return
+			if poss.start < dn.Pos() && poss.end > dn.Pos() {
+				return true
 			}
 		}
 
 		for _, t := range ts {
-			if dec.Tok == t {
+			if dn.Tok == t {
 				counts[t]++
 
 				if counts[t] > 1 {
-					pass.Reportf(dec.Pos(), "multiple \"%s\" declarations are not allowed; use parentheses instead", t.String())
+					pass.Reportf(dn.Pos(), "multiple \"%s\" declarations are not allowed; use parentheses instead", t.String())
 				}
 			}
 		}
-	})
+
+		return true
+	}
 }
