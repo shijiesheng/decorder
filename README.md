@@ -12,7 +12,7 @@ This linter can check
 ## Installation
 
 ```
-go install gitlab.com/bosi/decorder/cmd
+go get nstall gitlab.com/bosi/decorder/cmd
 ```
 
 ## Usage
