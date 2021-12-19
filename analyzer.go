@@ -1,4 +1,4 @@
-package main
+package decorder
 
 import (
 	"go/ast"
@@ -6,16 +6,13 @@ import (
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/analysis/singlechecker"
 )
 
 var (
 	Analyzer = &analysis.Analyzer{
-		Name:     "addlint",
-		Doc:      "reports integer additions",
-		Run:      run,
-		Requires: []*analysis.Analyzer{inspect.Analyzer},
+		Name: "decorder",
+		Doc:  "check declaration order and count of types, constants, variables and functions",
+		Run:  run,
 	}
 
 	decOrder                  string
@@ -30,10 +27,6 @@ func init() {
 	Analyzer.Flags.BoolVar(&disableDecNumCheck, "disable-dec-num-check", false, "option to disable check for number of e.g. var declarations inside file")
 	Analyzer.Flags.BoolVar(&disableDecOrderCheck, "disable-dec-order-check", false, "option to disable check for order of declarations inside file")
 	Analyzer.Flags.BoolVar(&disableInitFuncFirstCheck, "disable-init-func-first-check", false, "option to disable check that init function is always first function in file")
-}
-
-func main() {
-	singlechecker.Main(Analyzer)
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {

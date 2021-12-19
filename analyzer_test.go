@@ -1,4 +1,4 @@
-package main
+package decorder
 
 import (
 	"fmt"
