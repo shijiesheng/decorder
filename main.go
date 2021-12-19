@@ -3,6 +3,8 @@ package main
 import (
 	"go/ast"
 	"go/token"
+	"strings"
+
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/analysis/singlechecker"
@@ -16,11 +18,18 @@ var (
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
 	}
 
-	decOrder string
+	decOrder                  string
+	disableDecNumCheck        bool
+	disableDecOrderCheck      bool
+	disableInitFuncFirstCheck bool
 )
 
+//nolint:lll
 func init() {
-	Analyzer.Flags.StringVar(&decOrder, "decorder", "type,const,var,func", "define the order of types, constants, variables and functions declarations inside a file")
+	Analyzer.Flags.StringVar(&decOrder, "dec-order", "type,const,var,func", "define the required order of types, constants, variables and functions declarations inside a file")
+	Analyzer.Flags.BoolVar(&disableDecNumCheck, "disable-dec-num-check", false, "option to disable check for number of e.g. var declarations inside file")
+	Analyzer.Flags.BoolVar(&disableDecOrderCheck, "disable-dec-order-check", false, "option to disable check for order of declarations inside file")
+	Analyzer.Flags.BoolVar(&disableInitFuncFirstCheck, "disable-init-func-first-check", false, "option to disable check that init function is always first function in file")
 }
 
 func main() {
@@ -30,7 +39,10 @@ func main() {
 func run(pass *analysis.Pass) (interface{}, error) {
 	for _, f := range pass.Files {
 		ast.Inspect(f, runDeclNumCheck(pass))
-		ast.Inspect(f, runInitFuncFirstCheck(pass))
+
+		if !disableInitFuncFirstCheck {
+			ast.Inspect(f, runInitFuncFirstCheck(pass))
+		}
 	}
 
 	return nil, nil
@@ -57,17 +69,37 @@ func runInitFuncFirstCheck(pass *analysis.Pass) func(ast.Node) bool {
 	}
 }
 
+//nolint:funlen,gocognit
 func runDeclNumCheck(pass *analysis.Pass) func(ast.Node) bool {
-	ts := []token.Token{token.TYPE, token.CONST, token.VAR}
+	ts := []token.Token{token.TYPE, token.CONST, token.VAR, token.FUNC}
 
+	tsMap := map[string]token.Token{}
 	counts := map[token.Token]int{}
 	for _, t := range ts {
 		counts[t] = 0
+		tsMap[t.String()] = t
 	}
 
 	var funcPoss []struct {
 		start token.Pos
 		end   token.Pos
+	}
+
+	dos := strings.Split(decOrder, ",")
+
+	check := func(t token.Token) (string, bool) {
+		for i, do := range dos {
+			if do == t.String() {
+				for j := i + 1; j < len(dos); j++ {
+					if counts[tsMap[dos[j]]] > 0 {
+						return dos[j], false
+					}
+				}
+				return "", true
+			}
+		}
+
+		return "", true
 	}
 
 	return func(n ast.Node) bool {
@@ -77,6 +109,15 @@ func runDeclNumCheck(pass *analysis.Pass) func(ast.Node) bool {
 				start token.Pos
 				end   token.Pos
 			}{start: fn.Pos(), end: fn.End()})
+
+			counts[token.FUNC]++
+
+			if !disableDecOrderCheck {
+				o, c := check(token.FUNC)
+				if !c {
+					pass.Reportf(fn.Pos(), "%s must not be placed after %s", token.FUNC.String(), o)
+				}
+			}
 
 			return true
 		}
@@ -92,13 +133,22 @@ func runDeclNumCheck(pass *analysis.Pass) func(ast.Node) bool {
 			}
 		}
 
-		for _, t := range ts {
-			if dn.Tok == t {
-				counts[t]++
+		if !disableDecNumCheck {
+			for _, t := range ts {
+				if dn.Tok == t {
+					counts[t]++
 
-				if counts[t] > 1 {
-					pass.Reportf(dn.Pos(), "multiple \"%s\" declarations are not allowed; use parentheses instead", t.String())
+					if counts[t] > 1 {
+						pass.Reportf(dn.Pos(), "multiple \"%s\" declarations are not allowed; use parentheses instead", t.String())
+					}
 				}
+			}
+		}
+
+		if !disableDecOrderCheck {
+			o, c := check(dn.Tok)
+			if !c {
+				pass.Reportf(dn.Pos(), "%s must not be placed after %s", dn.Tok.String(), o)
 			}
 		}
 

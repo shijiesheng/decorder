@@ -1,0 +1,52 @@
+output:
+    sort-results: true
+
+linters:
+    disable-all: true
+    #    https://golangci-lint.run/usage/linters/
+    enable:
+        - asciicheck    # check for non-ascii chars in identifiers (vars, functions, types, ...)
+        - bodyclose # check for unclosed bodies of http requests (does not work in very complex scenarios)
+        - deadcode  # check unused code
+        - dupl  # check for duplicates with at least 100 chars (can be changed via config)
+        - durationcheck # check for 2 durations which are multiplied by accident
+        - errcheck  # check that all errors are handled
+        - exportloopref # check for exported pointers on loop variables
+        - funlen #check for too long functions (default: 60 lines or 40 statements)
+        - gocognit  # check for functions with too high cognitive complexity
+        - goconst   # check for multiple used strings with could be replaced by a const
+        - godox # check for todos and fixmes
+        - gofumpt   # check against the coding standard rules of https://github.com/mvdan/gofumpt (an extension of gofmt)
+        - gomnd # check magic numbers
+        - gosimple  # check if code can be simplified e.g. !condition instead of condition == false
+        - govet     # check incorrect printf format-argument calls
+        - ifshort   # check for if-statements which can be replaced by short version
+        - ineffassign   # check unused assignments to existing vars
+        - lll   # check max line length
+        - nilerr    # check if function returns nil although a checked error is not nil
+        - paralleltest # check if t.Parallel() is used in all tests
+        - predeclared # check that definitions (vars, functions, ...) do not use predeclared names like int, string, copy, print, ...
+        - revive    # linter (replaces golint)
+        - unconvert # check unnecessary type conversions
+        - unparam   # check (well... it tries) to find unused func params or returns
+        - unused    # check unused constants, functions, types, vars and struct fields
+        - stylecheck
+
+linters-settings:
+    gocognit:
+        # https://tomasvotruba.com/blog/2018/05/21/is-your-code-readable-by-humans-cognitive-complexity-tells-you/
+        # https://blog.sonarsource.com/cognitive-complexity-because-testability-understandability
+        # https://www.sonarsource.com/docs/CognitiveComplexity.pdf
+        min-complexity: 15
+
+issues:
+    exclude-rules:
+        -   path: _test\.go
+            linters:
+                - funlen
+                - errcheck
+                - dupl
+                - goconst
+                - bodyclose
+                - lll
+    fix: true
