@@ -12,7 +12,7 @@ stages:
 
 test:
     stage: test
-    image: golang:1.16
+    image: golang:1.17.5
     before_script:
         - set -eu
         - if [[ -f .env.pipeline ]];then cp .env.pipeline .env;fi
@@ -27,14 +27,14 @@ test:
 
 lint:source-code:
     stage: test
-    image: golangci/golangci-lint:latest-alpine
+    image: golangci/golangci-lint:v1.43.0-alpine
     script:
         - '### run linter ###'
         - golangci-lint run ./...
 
 license-check:
     stage: test
-    image: golang:1.16
+    image: golang:1.17.5
     before_script:
         - set -eu
         - if [[ -f .env.pipeline ]];then cp .env.pipeline .env;fi
@@ -51,7 +51,7 @@ license-check:
 
 pages:
     stage: release
-    image: golang:1.16
+    image: golang:1.17.5
     only:
         - tags
     script:

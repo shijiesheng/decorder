@@ -4,9 +4,6 @@
 app:
     name: decorder
 
-versions:
-    go: "1.16"
-
 code_quality:
     enable_tests: true
     enable_static_code_analyses: true
@@ -16,5 +13,3 @@ deployment:
     enable_rc_handling: false
     use_gitlab_container_registry: false
     enable_image_build_and_deploy: false
-    swarm_deployment:
-        enable: false

@@ -113,6 +113,7 @@ gitlab-pages: check-licenses
 update-project-templates:
 	@rm -rf ./project-templates
 	@cp -ar ~/.dotfiles/projects/golang ./project-templates
+	@cp project-templates/renovate.json ./
 
 gitlab-ci: .gitlab-ci.params.yml ytt yq ## generate .gitlab-ci.yml based on gitlab-ci.params.yml
 	@printf '###############################\n' > .gitlab-ci.yml

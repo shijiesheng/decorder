@@ -30,7 +30,6 @@ linters:
         - unconvert # check unnecessary type conversions
         - unparam   # check (well... it tries) to find unused func params or returns
         - unused    # check unused constants, functions, types, vars and struct fields
-        - stylecheck
 
 linters-settings:
     gocognit:
