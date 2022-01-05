@@ -8,9 +8,18 @@ import (
 	"golang.org/x/tools/go/analysis"
 )
 
+const (
+	Name = "decorder"
+
+	FlagDo    = "dec-order"
+	FlagDdnc  = "disable-dec-num-check"
+	FlagDdoc  = "disable-dec-order-check"
+	FlagDiffc = "disable-init-func-first-check"
+)
+
 var (
 	Analyzer = &analysis.Analyzer{
-		Name: "decorder",
+		Name: Name,
 		Doc:  "check declaration order and count of types, constants, variables and functions",
 		Run:  run,
 	}
@@ -23,10 +32,10 @@ var (
 
 //nolint:lll
 func init() {
-	Analyzer.Flags.StringVar(&decOrder, "dec-order", "type,const,var,func", "define the required order of types, constants, variables and functions declarations inside a file")
-	Analyzer.Flags.BoolVar(&disableDecNumCheck, "disable-dec-num-check", false, "option to disable check for number of e.g. var declarations inside file")
-	Analyzer.Flags.BoolVar(&disableDecOrderCheck, "disable-dec-order-check", false, "option to disable check for order of declarations inside file")
-	Analyzer.Flags.BoolVar(&disableInitFuncFirstCheck, "disable-init-func-first-check", false, "option to disable check that init function is always first function in file")
+	Analyzer.Flags.StringVar(&decOrder, FlagDo, "type,const,var,func", "define the required order of types, constants, variables and functions declarations inside a file")
+	Analyzer.Flags.BoolVar(&disableDecNumCheck, FlagDdnc, false, "option to disable check for number of e.g. var declarations inside file")
+	Analyzer.Flags.BoolVar(&disableDecOrderCheck, FlagDdoc, false, "option to disable check for order of declarations inside file")
+	Analyzer.Flags.BoolVar(&disableInitFuncFirstCheck, FlagDiffc, false, "option to disable check that init function is always first function in file")
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
@@ -79,6 +88,10 @@ func runDeclNumCheck(pass *analysis.Pass) func(ast.Node) bool {
 	}
 
 	dos := strings.Split(decOrder, ",")
+
+	for i, do := range dos {
+		dos[i] = strings.TrimSpace(do)
+	}
 
 	check := func(t token.Token) (string, bool) {
 		for i, do := range dos {

@@ -1,9 +1,9 @@
-package customDecOrder
+package customDecOrderAll
 
-func a() {}
+type ad int
 
-const b = 1
+func aa() {}
 
-var c = 1
+const ab = 1
 
-type d int
+var ac = 1

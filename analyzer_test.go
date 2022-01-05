@@ -17,7 +17,15 @@ func TestAll(t *testing.T) {
 func TestCustomDecOrder(t *testing.T) {
 	optBak := decOrder
 	defer func() { decOrder = optBak }()
-	decOrder = "func,const,var,type"
+	decOrder = "func ,const,   var ,type"
+	analysistest.Run(t, testdata(), Analyzer, "customDecOrderAll")
+}
+
+//nolint:paralleltest
+func TestCustomDecOrderAll(t *testing.T) {
+	optBak := decOrder
+	defer func() { decOrder = optBak }()
+	decOrder = "const,var"
 	analysistest.Run(t, testdata(), Analyzer, "customDecOrder")
 }
 
