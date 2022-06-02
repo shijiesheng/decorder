@@ -12,7 +12,7 @@ stages:
 
 test:
     stage: test
-    image: golang:1.18.2@sha256:02c05351ed076c581854c554fa65cb2eca47b4389fb79a1fc36f21b8df59c24f
+    image: golang:1.18.3@sha256:b203dc573d81da7b3176264bfa447bd7c10c9347689be40540381838d75eebef
     before_script:
         - set -eu
         - if [[ -f .env.pipeline ]];then cp .env.pipeline .env;fi
@@ -34,7 +34,7 @@ lint:source-code:
 
 license-check:
     stage: test
-    image: golang:1.18.2@sha256:02c05351ed076c581854c554fa65cb2eca47b4389fb79a1fc36f21b8df59c24f
+    image: golang:1.18.3@sha256:b203dc573d81da7b3176264bfa447bd7c10c9347689be40540381838d75eebef
     before_script:
         - set -eu
         - if [[ -f .env.pipeline ]];then cp .env.pipeline .env;fi
@@ -51,7 +51,7 @@ license-check:
 
 pages:
     stage: release
-    image: golang:1.18.2@sha256:02c05351ed076c581854c554fa65cb2eca47b4389fb79a1fc36f21b8df59c24f
+    image: golang:1.18.3@sha256:b203dc573d81da7b3176264bfa447bd7c10c9347689be40540381838d75eebef
     only:
         - tags
     script:
