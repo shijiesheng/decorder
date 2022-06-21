@@ -18,3 +18,5 @@ var (
 func bg() {}
 
 func init() {} // want "init func must be the first function in file"
+
+func (_ ba) init() {}
