@@ -27,7 +27,7 @@ test:
 
 lint:source-code:
     stage: test
-    image: golangci/golangci-lint:v1.46.2-alpine@sha256:6a09f1e87ecce4eab163470467cd88dab3a0efa31cb708ba6d514a6889816095
+    image: golangci/golangci-lint:v1.47.2-alpine@sha256:10ed4891fdd1f7249f5e39d7c17ea746ce26adada3c05686c6aa31290abcd180
     script:
         - '### run linter ###'
         - golangci-lint run ./...
